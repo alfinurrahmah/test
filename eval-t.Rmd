@@ -1,0 +1,289 @@
+---
+title: "evaluation"
+author: "AlfiNurrahmah"
+date: "3/29/2022"
+output: html_document
+---
+
+## Silhouette index
+```{r}
+library(cluster)
+sil100<-silhouette(fuzzyart55r$labels, dist(data100))
+sil100s<-summary(sil100)
+sil100s$avg.width
+plot(sil100)
+#silhouette(cbhasilfabook3, dist(book3))
+
+```
+```{r}
+sil40r100 <- summary(silhouette(fuzzyart40r$labels, dist(data100)))
+sil50r100 <- summary(silhouette(fuzzyart50r$labels, dist(data100)))
+sil60r100 <- summary(silhouette(fuzzyart60r$labels, dist(data100)))
+sil70r100 <- summary(silhouette(fuzzyart70r$labels, dist(data100)))
+sil40r1000 <- summary(silhouette(fuzzyart40r1000$labels, dist(data1000)))
+sil50r1000 <- summary(silhouette(fuzzyart50r1000$labels, dist(data1000)))
+sil60r1000 <- summary(silhouette(fuzzyart60r1000$labels, dist(data1000)))
+sil70r1000 <- summary(silhouette(fuzzyart70r1000$labels, dist(data1000)))
+```
+```{r}
+sil40r100$avg.width
+sil50r100$avg.width
+sil60r100$avg.width
+sil70r100$avg.width
+sil40r1000$avg.width
+sil50r1000$avg.width
+sil60r1000$avg.width
+sil70r1000$avg.width
+```
+
+```{r}
+sil40r100
+sil50r100
+sil60r100
+sil70r100
+sil40r1000
+sil50r1000
+sil60r1000
+sil70r1000
+```
+#PAKAI TESTING
+```{r}
+sil40r100 <- summary(silhouette(tfa40r$labels, dist(data100)))
+sil50r100 <- summary(silhouette(tfa50r$labels, dist(data100)))
+sil60r100 <- summary(silhouette(tfa60r$labels, dist(data100)))
+sil70r100 <- summary(silhouette(tfa70r$labels, dist(data100)))
+sil40r1000 <- summary(silhouette(tfa40r1000$labels, dist(data1000)))
+sil50r1000 <- summary(silhouette(tfa50r1000$labels, dist(data1000)))
+sil60r1000 <- summary(silhouette(tfa60r1000$labels, dist(data1000)))
+sil70r1000 <- summary(silhouette(tfa70r1000$labels, dist(data1000)))
+```
+
+```{r}
+sil40r100$avg.width
+sil50r100$avg.width
+sil60r100$avg.width
+sil70r100$avg.width
+sil40r1000$avg.width
+sil50r1000$avg.width
+sil60r1000$avg.width
+sil70r1000$avg.width
+```
+```{r}
+kmsil40r100 <- summary(silhouette(kmtfa40r$labels, dist(data100)))
+kmsil50r100 <- summary(silhouette(kmtfa50r$labels, dist(data100)))
+kmsil60r100 <- summary(silhouette(kmtfa60r$labels, dist(data100)))
+kmsil70r100 <- summary(silhouette(kmtfa70r$labels, dist(data100)))
+kmsil40r1000 <- summary(silhouette(kmtfa40r1000$labels, dist(data1000)))
+kmsil50r1000 <- summary(silhouette(kmtfa50r1000$labels, dist(data1000)))
+kmsil60r1000 <- summary(silhouette(kmtfa60r1000$labels, dist(data1000)))
+kmsil70r1000 <- summary(silhouette(kmtfa70r1000$labels, dist(data1000)))
+```
+```{r}
+kmsil40r100$avg.width
+kmsil50r100$avg.width
+kmsil60r100$avg.width
+kmsil70r100$avg.width
+kmsil40r1000$avg.width
+kmsil50r1000$avg.width
+kmsil60r1000$avg.width
+kmsil70r1000$avg.width
+```
+
+```{r}
+fkmsil1 <- summary(silhouette(fkm40r1$labels, dist(data100)))
+fkmsil2 <- summary(silhouette(fkm40r2$labels, dist(data100)))
+fkmsil3 <- summary(silhouette(fkm40r3$labels, dist(data100)))
+fkmsil4 <- summary(silhouette(fkm40r4$labels, dist(data100)))
+fkmsil5 <- summary(silhouette(fkm40r5$labels, dist(data100)))
+fkmsil6 <- summary(silhouette(fkm40r6$labels, dist(data100)))
+fkmsil7 <- summary(silhouette(fkm40r7$labels, dist(data100)))
+fkmsil8 <- summary(silhouette(fkm40r8$labels, dist(data100)))
+```
+
+```{r}
+fkmsil1$avg.width
+fkmsil2$avg.width
+fkmsil3$avg.width
+fkmsil4$avg.width
+fkmsil5$avg.width
+fkmsil6$avg.width
+fkmsil7$avg.width
+fkmsil8$avg.width
+```
+
+#Cluster Validation
+Dunn Index pake library fpc
+```{r}
+library(fpc)
+# Compute pairwise-distance matrices
+dd <- dist(book3, method ="euclidean")
+# Statistics for k-means clustering
+km_stats <- cluster.stats(dd,  data.km$cluster)
+# (k-means) within clusters sum of squares
+#km_stats$within.cluster.ss
+km_stats$dunn
+```
+## Dunn
+```{r}
+library(clValid)
+
+kmdunn40r100<-dunn(dist(data100),tfa40r$labels)
+kmdunn50r100<-dunn(dist(data100),tfa50r$labels)
+kmdunn60r100<-dunn(dist(data100),tfa60r$labels)
+kmdunn70r100<-dunn(dist(data100),tfa70r$labels)
+kmdunn40r1000<-dunn(dist(data1000),tfa40r1000$labels)
+kmdunn50r1000<-dunn(dist(data1000),tfa50r1000$labels)
+kmdunn60r1000<-dunn(dist(data1000),tfa60r1000$labels)
+kmdunn70r1000<-dunn(dist(data1000),tfa70r1000$labels)
+
+```
+```{r}
+kmdunn40r100
+kmdunn50r100
+kmdunn60r100
+kmdunn70r100
+kmdunn40r1000
+kmdunn50r1000
+kmdunn60r1000
+kmdunn70r1000
+```
+```{r}
+library(clValid)
+
+dunn40r100<-dunn(dist(data100),kmtfa40r$labels)
+dunn50r100<-dunn(dist(data100),kmtfa50r$labels)
+dunn60r100<-dunn(dist(data100),kmtfa60r$labels)
+dunn70r100<-dunn(dist(data100),kmtfa70r$labels)
+dunn40r1000<-dunn(dist(data1000),kmtfa40r1000$labels)
+dunn50r1000<-dunn(dist(data1000),kmtfa50r1000$labels)
+dunn60r1000<-dunn(dist(data1000),kmtfa60r1000$labels)
+dunn70r1000<-dunn(dist(data1000),kmtfa70r1000$labels)
+
+```
+```{r}
+dunn40r100
+dunn50r100
+dunn60r100
+dunn70r100
+dunn40r1000
+dunn50r1000
+dunn60r1000
+dunn70r1000
+```
+
+## DB Index
+
+```{r}
+library(clusterSim)
+kmdb40r100<-index.DB(dist(data100),kmtfa40r$labels)$DB
+kmdb50r100<-index.DB(dist(data100),kmtfa50r$labels)$DB
+kmdb60r100<-index.DB(dist(data100),kmtfa60r$labels)$DB
+kmdb70r100<-index.DB(dist(data100),kmtfa70r$labels)$DB
+kmdb40r1000<-index.DB(dist(data1000),kmtfa40r1000$labels)$DB
+kmdb50r1000<-index.DB(dist(data1000),kmtfa50r1000$labels)$DB
+kmdb60r1000<-index.DB(dist(data1000),kmtfa60r1000$labels)$DB
+kmdb70r1000<-index.DB(dist(data1000),kmtfa70r1000$labels)$DB
+
+```
+```{r}
+kmdb40r100
+kmdb50r100
+kmdb60r100
+kmdb70r100
+kmdb40r1000
+kmdb50r1000
+kmdb60r1000
+kmdb70r1000
+```
+```{r}
+library(clusterSim)
+db40r100<-index.DB(dist(data100),kmtfa40r$labels)$DB
+db50r100<-index.DB(dist(data100),kmtfa50r$labels)$DB
+db60r100<-index.DB(dist(data100),kmtfa60r$labels)$DB
+db70r100<-index.DB(dist(data100),kmtfa70r$labels)$DB
+db40r1000<-index.DB(dist(data1000),kmtfa40r1000$labels)$DB
+db50r1000<-index.DB(dist(data1000),kmtfa50r1000$labels)$DB
+db60r1000<-index.DB(dist(data1000),kmtfa60r1000$labels)$DB
+db70r1000<-index.DB(dist(data1000),kmtfa70r1000$labels)$DB
+
+```
+```{r}
+db40r100
+db50r100
+db60r100
+db70r100
+db40r1000
+db50r1000
+db60r1000
+db70r1000
+```
+```{r}
+
+```
+
+
+```{r}
+library(clusterSim)
+
+index.DB(dd,data.km$cluster)$DB
+index.DB(dd,cbhasilfabook3)$DB
+
+#index.DB(jan18sum@coords,l_jan18sum$cluster)$DB
+#index.DB(jan18sum@coords,d_jan18sum$cluster)$DB
+
+
+```
+```{r}
+library(lsdbc)
+betaCV(data.km$cluster,dd)
+```
+
+
+```{r}
+get_snorm <- function(n){
+  st <- Sys.time()
+  x <- matrix(NA, 5*n, 2)
+  x1 <- c()
+  x2 <- c()
+  distance <- vector(length = 5*n)
+
+  for(i in 1:(5*n)){
+    x[i,] <- runif(2,0,1)
+    distance[i] <- sqrt((x[i,1]^2)+(x[i,2]^2))
+
+    if(distance[i] <= 1 && distance[i] >=0.9){
+      x1 <- c(x1,x[i,1])
+      x2 <- c(x2,x[i,2])
+    } else if(distance[i] <= 0.5 && distance[i] >=0.4){
+      x1 <- c(x1,x[i,1])
+      x2 <- c(x2,x[i,2])
+    } else if(distance[i] <= 0.1){
+      x1 <- c(x1,x[i,1])
+      x2 <- c(x2,x[i,2])
+    }
+  }
+  et <- Sys.time()
+  rt=et-st
+  return(cbind(x1[1:n],x2[1:n]))
+}
+```
+```{r}
+datanorm1000<-get_snorm(1000) 
+tail(datanorm1000)
+plot(datanorm1000)
+```
+
+
+```{r}
+d1<-dist(book3,diag = F, upper = T)
+#plot(dist(book3,diag = T, upper = T))
+```
+### Visualisasi Distance Matrix
+```{r}
+library(factoextra) # EDA, untuk membuat distance matriks
+fviz_dist(d1, gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+```
+```{r}
+AKHIRNYA
+```
+

@@ -1,0 +1,61 @@
+---
+title: "generate"
+author: "AlfiNurrahmah"
+date: "6/5/2022"
+output: html_document
+---
+```{r}
+library(MASS)
+set.seed(1234)
+dataclust11<-mvrnorm(40,c(-2.5,-2.5,-2.5), matrix(c(5,5,-1.75,5,7,-4.75,-1.75,-4.75,5.5), nrow = 3))
+dataclust12<-mvrnorm(40,c(2,2.5,2),matrix(c(3.75,2.75,0,2.75,4,-2.75,0,-2.75,5), nrow = 3))
+dataclust13<-mvrnorm(40,c(-2.5,2,-2),matrix(c(4.75,3.75,0,3.75,4.75,-2.75,0,-2.75,5), nrow = 3))
+dataclust11<-cbind(dataclust11,"1")
+dataclust12<-cbind(dataclust12,"2")
+dataclust13<-cbind(dataclust13,"3")
+datagen1<-rbind(dataclust11,dataclust12,dataclust13)
+datagen1
+
+# dataclust11
+# dataclust12
+# dataclust13
+# dataclust11
+# dataclust12
+# dataclust13
+
+
+
+```
+
+```{r}
+dataclust1
+```
+## generate data 2, tanpa overlap 2 var 4 clust
+```{r}
+library(MASS)
+set.seed(1234)
+dataclust21<-mvrnorm(10,c(-1,1),matrix(c(0.1,-0.075,-0.075,0.2), nrow = 2))
+dataclust22<-mvrnorm(10,c(-0.75,-1),matrix(c(0.1,0.075,0.075,0.2), nrow = 2))
+dataclust23<-mvrnorm(10,c(0.5,1),matrix(c(0.25,0.15,0.15,0.2), nrow = 2))
+dataclust24<-mvrnorm(10,c(0.5,-1),matrix(c(0.25,-0.15,-0.15,0.2), nrow = 2))
+dataclust21<-cbind(dataclust21,"1")
+dataclust22<-cbind(dataclust22,"2")
+dataclust23<-cbind(dataclust23,"3")
+dataclust24<-cbind(dataclust24,"4")
+datagen2<-rbind(dataclust21,dataclust22,dataclust23,dataclust24)
+datagen2
+```
+## generate data 3 tanpa overlap 2 var 3 clust
+```{r}
+library(MASS)
+set.seed(1234)
+dataclust31<-mvrnorm(20,c(3,2), matrix(c(5.5,2,2,1.7), nrow = 2))
+dataclust32<-mvrnorm(20,c(-3.5,-3.5),matrix(c(6.7,3.8,3.8,2.5), nrow = 2))
+dataclust33<-mvrnorm(20,c(0.5,0.25),matrix(c(2,0.75,0.75,1.2), nrow = 2))
+dataclust31<-cbind(dataclust31,"1")
+dataclust32<-cbind(dataclust32,"2")
+dataclust33<-cbind(dataclust33,"3")
+datagen3<-rbind(dataclust31,dataclust32,dataclust33)
+datagen3
+```
+

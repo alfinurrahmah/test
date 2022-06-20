@@ -1,0 +1,620 @@
+```{r}
+dt <- book3
+dt
+
+
+num_features = dim(dt)[2] 
+w_init=NA
+if(!is.na(w_init))
+  {
+    # check if weight dimension matches input size
+    stopifnot(dim(w_init)[2]==num_features*2)
+
+    # initialiuw weights
+    w = w_init
+}  else{ w = matrix(rep(1,num_features*2),nrow = 1)}
+w
+  num_clusters = dim(w)[1]
+```
+
+
+```{r}
+vigilance_fn_default_inf = function(pattern, category_w, rho)
+{
+  return(inf_norm(pattern_compare(pattern, category_w)>=(rho*inf_norm(pattern))))
+}
+```
+
+#' Checks whether the vigilance test was passed (using 1-norm)
+#'
+#' @param pattern input pattern
+#' @param category_w weights of selected cluster
+#' @param rho vigilance parameter
+#'
+#' @return Boolean specifying whether the test was passed or not.
+vigilance_fn_default_one = function(pattern, category_w, rho)
+{
+  return(one_norm(pattern_compare(pattern, category_w)>=(rho*inf_norm(pattern))))
+}
+```{r}
+vigilance_fn_default_one = function(pattern, category_w, rho)
+{
+  return(one_norm(pattern_compare(pattern, category_w)>=(rho*inf_norm(pattern))))
+}
+```
+
+#' Matches a pattern and category. This is the default function used. You may replace it with a custom one that takes the same inputs and produces a scalar output.
+#'
+#' @param pattern Current input pattern.
+#' @param category_w Weight for the current category being matched.
+#' @param alpha Choice parameter alpha > 0. This is specified in \code{\link[FuzzyART:FuzzyART_train]{FuzzyART_train()}}.
+#'
+#' @return The fuzzy extension of the logical AND statement.
+#' @export
+match_fn_default = function(pattern, category_w, alpha)
+{
+  return(one_norm(pattern_compare(pattern, category_w)/(alpha+one_norm(pattern))))
+}
+
+```{r}
+match_fn_default = function(pattern, category_w, alpha)
+{
+  return(one_norm(pattern_compare(pattern, category_w)/(alpha+one_norm(pattern))))
+}
+```
+
+#' update_fn_default
+#'
+#' @param pattern The input observation.
+#' @param category_w Current category weight.
+#' @param beta Learnign Rate. This is specified in \code{\link[FuzzyART:FuzzyART_train]{FuzzyART_train()}}.
+#' @param distance_fn A distance function with the parameters and outputs like \code{\link[FuzzyART:fuzzy_and]{fuzzy_and()}}.
+#'
+#' @export
+update_fn_default = function(pattern, category_w, beta, distance_fn= fuzzy_and)
+{
+  return(beta*pattern_compare(pattern,category_w,distance_fn = distance_fn)+(1-beta)*category_w)
+}
+
+```{r}
+update_fn_default = function(pattern, category_w, beta, distance_fn= fuzzy_and)
+{
+  return(beta*pattern_compare(pattern,category_w,distance_fn = distance_fn)+(1-beta)*category_w)
+}
+```
+
+#' Fuzzy And Function
+#'
+#' @param a First input vector
+#' @param b Second input vector. Should be of the same dimension as a.
+#'
+#' @return Returns the Fuzzy AND of two respective values in a vector. See the example for details.
+#' @export
+#'
+#' @examples fuzzy_and(1,0) # = 0
+#' fuzzy_and(0, 1) # = 0
+#' fuzzy_and(0, 0) # = 0
+#' fuzzy_and(1, 1) # = 1
+#' fuzzy_and(c(0.5, 1), c(0.25,0)) # = c(0.25,0)
+
+```{r}
+fuzzy_and = function(a,b)
+{
+  comb = cbind(a,b)
+  return(apply(X = comb,FUN = min,MARGIN = 1))
+}
+```
+
+
+```{r}
+for (i in 1:dim(dts)[1]) {
+  fza <- fuzzy_and(dts[i,],w)
+}
+fza
+fza1 <- fuzzy_and(dts[1,],w)
+
+```
+
+#' Computes the inf-norm of a vector (not compatiple with matrices).
+#'
+#' @param pattern The input pattern (vector) for the computation of the norm.
+#'
+#' @return Returns the maximum norm of a vector.
+#' @export
+#'
+#' @examples a = c(-3,2,-6,5)
+#' inf_norm(a) #=6
+
+```{r}
+inf_norm = function(pattern)
+{
+  return(max(abs(pattern)))
+}
+```
+
+#' Computes the 1-norm of a vector (not compatiple with matrices)
+#'
+#' @param pattern The input pattern (vector) for the computation of the norm.
+#'
+#' @return The 1-norm of the input pattern.
+#' @export
+#'
+#' @examples a = c(-3,2,-6,5)
+#' one_norm(a) #=16
+
+```{r}
+one_norm = function(pattern)
+{
+  return(sum(abs(pattern)))
+}
+one_norm(datasetcb)
+```
+
+#======================================================================
+
+
+
+
+```{r}
+cbtrain_pattern = function(pattern, w, alpha, rho, beta, num_clusters, max_cluster_count,
+                         match_fn=match_fn_default, update_fn = update_fn_default,
+                         distance_fn = fuzzy_and, vigilance_fn = vigilance_fn_default,
+                         out.lst = list(w = NA, num_clusters=NA, winner = NA))
+{
+  #find the winning category
+  winner = eval_pattern(pattern = pattern,w = w,alpha = alpha, rho = rho,match_fn = match_fn, vigilance_fn= vigilance_fn)
+
+  #did an uncommited category win? -> create a new category
+  if(winner > num_clusters)
+  {
+    #create a new category
+    num_clusters = num_clusters+1
+    # was the maximum cluster count reached?
+
+
+    if(num_clusters>max_cluster_count) stop("Error in 'train_pattern'. The maximum cluster count was exceeded!")
+    w = rbind(w,pattern)#appendrep(1,dim(w)[2])
+  }
+  #overwritmatche old weights to include the initialization of the new one
+  out.lst$w_old = w
+  #update weight of winning category
+  w[winner,] <-weight_update(pattern,w[winner,],beta,
+                             update_fn = update_fn, distance_fn = distance_fn)
+
+  out.lst$winner = winner
+  out.lst$w = w
+  out.lst$num_clusters = num_clusters
+  return(out.lst)
+}
+```
+
+
+```{r}
+cbeval_pattern = function(pattern,w, alpha, rho,
+                        match_fn=match_fn_default, vigilance_fn = vigilance_fn_default)
+{
+  #w
+  m = dim(w)[1]# number of clusters
+  matches = rep(0,m)
+
+  matches = apply(X = w,MARGIN = 1,FUN = function(weight){return(category_choice(pattern,weight,alpha, match_fn = match_fn))})
+  #for(j in 1:m)
+  #{
+  #  matches[j]= category_choice(pattern,w[j,],alpha)
+  #}
+  match_attempts = 0
+  while(match_attempts<length(matches))
+  {
+    #select the winning category
+    winner = which.max(matches) #which.max() function in R Language is used to return the location of the first maximum value in the Numeric Vector.
+    if(vigilance_check(pattern, w[winner,],rho,vigilance_fn = vigilance_fn)) return(winner)
+    else
+    {
+      #try next best category if vigilance test was failed
+      matches[winner]<-0
+      match_attempts<-match_attempts+1
+    }
+  }
+  return(length(matches))
+}
+```
+
+```{r}
+pattern_compare = function(pattern, category_w,
+                           distance_fn = fuzzy_and)
+{
+  return(distance_fn(pattern, category_w))
+}
+```
+
+```{r}
+category_choice = function(pattern, category_w, alpha,
+                           match_fn = match_fn_default)
+{
+  match_fn(pattern,category_w,alpha)
+}
+```
+
+```{r}
+vigilance_check = function(pattern, category_w, rho,
+                           vigilance_fn = vigilance_fn_default_one)
+{
+  return(vigilance_fn(pattern,category_w,rho))
+}
+```
+
+```{r}
+weight_update = function(pattern,category_w,beta,
+                         update_fn=update_fn_default,distance_fn=fuzzy_and)
+{
+  return(update_fn(pattern,category_w,beta,distance_fn))
+}
+```
+#================================================================
+```{r}
+utils::globalVariables(c("vigilance_fn_default", "vigilance_fn_default", "vigilance_fn_default"))
+#' Specifies and trains a FuzzyART model
+#'
+#' @param inputs Specifies input data as a data.frame, matrix or simiar structure. Inputs should be normalized prior to running by using the \code{\link[=normalize]{normalize()}} function.
+#' @param rho Vigilance parameter in (0,1).
+#' @param alpha Choice parameter alpha > 0. Can be viewed as a regularization parameter penalizing large weights.
+#' @param beta Learning rate in (0,1).
+#' @param max_epochs Maximum number of iterations over the input.
+#' @param shuffle TRUE allows the input to be shuffled during training. FALSE disables this.
+#' @param random_seed A number specifying the seed for the random number generator while shuffling.
+#' @param w_init Initial model weights.
+#' @param distance_fn A distance function to determine how close an observation is to the category weight (see \code{\link[=fuzzy_and]{fuzzy_and()}} for specifications).
+#' @param match_fn A match function like \code{\link[FuzzyART:match_fn_default]{match_fn_default()}}.
+#' @param vigilance_fn A vigilance function like \code{\link[FuzzyART:vigilance_fn_default_one]{vigilance_fn_default_one()}}.
+#' @param update_fn An update function like \code{\link[FuzzyART:update_fn_default]{update_fn_default()}}.
+#' @param max_clusters The maximum numbers of cluster allowed.
+#' @param eps Tolerance. Default is 10^-6.
+#' @param show_status TRUE (default) will display the progress of learning measured as a percentage of max_epochs. FALSE will supress the status.
+#' @param beta_decay A decay factor between 0 and 1. The closer to 0, the faster the decay.
+#'
+#' @return A list specifying the trained parameters, the labels for the input dazta, and the parameters used
+#' @export
+#' @md
+#'
+#'
+#' @references
+#' Carpenter, Gail A., Stephen Grossberg, and David B. Rosen. "Fuzzy ART: Fast stable learning and categorization of analog patterns by an adaptive resonance system." Neural networks 4.6 (1991): 759-771.
+#' @examples normalized_inputs = normalize(df = subset(iris,select = -Species))
+#' mod  = FuzzyART_train(normalized_inputs,alpha = .8,rho = .5,beta = .08,
+#'                       max_epochs = 1000,max_clusters =20,eps = 10^-8,random_seed = 4)
+#' mod$Labels
+#' plot(iris, col = mod$Labels)
+cbFuzzyART_train = function(inputs, rho, alpha, beta, max_epochs, shuffle = TRUE,
+                    random_seed = NA, w_init = NA, distance_fn = fuzzy_and,
+                    match_fn = match_fn_default, vigilance_fn = vigilance_fn_default_one, update_fn = update_fn_default,
+                    max_clusters = 1000, eps = 10^-6, show_status = TRUE, beta_decay = 1)
+{
+  st <- Sys.time()
+  ###### save parameters #########
+  params = list()
+  params[["rho"]]         = rho #200
+  params[["alpha"]]       = alpha 
+  params[["beta"]]        = beta
+  params[["max_epochs"]]  = max_epochs
+  params[["shuffle"]]     = shuffle
+  params[["random_seed"]] = random_seed
+  params[["w_init"]]      = w_init
+  params[["distance_fn"]] = distance_fn
+  params[["match_fn"]]    = match_fn
+  params[["update_fn"]]   = update_fn
+  params[["update_fn"]]   = update_fn
+  params[["vigilance_fn"]]= vigilance_fn
+  ###### fit             ######
+  num_features = dim(inputs)[2] 
+  if(!is.na(w_init))
+  {
+    # check if weight dimension matches input size
+    stopifnot(dim(w_init)[2]==num_features*2)
+
+    # initialiuw weights
+    w = w_init
+  }  else{ w = matrix(rep(1,num_features*2),nrow = 1)}
+  num_clusters = dim(w)[1]
+  
+  dataset = cbind(inputs,1-inputs)
+
+  #init variables
+  num_clusters_old = num_clusters
+  cluster_labels = rep(NA, dim(dataset)[1])
+  iterations = 0
+  w_old = w+1
+
+  if(shuffle & !is.na(random_seed)) set.seed(random_seed)
+
+  # learning until max_epochs reached or convergence
+  train_output_lst = list(w = NA, num_clusters=NA, winner = NA)
+  indices = 1:dim(dataset)[1]
+  while((sum((w_old-w)^2)>eps^2) & (iterations< max_epochs))
+  {
+    if(show_status & iterations %% 100 ==0) print(paste0("Training FuzzyART in progress: ", round(iterations/max_epochs*100,digits = 2),"%."))
+
+    w_old = w
+    if(shuffle) indices <- sample(indices)
+
+    for(i in indices)
+    {
+      train_output_lst <- cbtrain_pattern(dataset[i,],w,alpha,rho,beta,num_clusters,max_cluster_count = max_clusters,
+                                        match_fn=match_fn, update_fn = update_fn,
+                                        distance_fn = distance_fn, vigilance_fn = vigilance_fn,
+                                        out.lst = train_output_lst)
+      cluster_labels[i] <- train_output_lst$winner
+      w <- train_output_lst$w
+      #w_old <- train_output_lst$w_old
+      num_clusters <- train_output_lst$num_clusters
+    }
+    iterations = iterations+1
+    beta = beta*beta_decay
+    #w and w_old conformable?
+    if(num_clusters_old != num_clusters)
+    {
+      w_old = rbind(w_old,replicate(n = num_features*2, rep(1,num_clusters-num_clusters_old)))
+      num_clusters_old = num_clusters
+    }
+  }
+  
+  
+  fa_clusters = list()
+  for(k in 1:num_clusters)
+  {
+    fa_clusters[[k]] <- dataset[which(cluster_labels == k),]
+  }
+
+  fa_centroids = matrix(NA,nrow=num_clusters,ncol=ncol(input)+1)
+  fa_centroids<-recalculate_centroids(centroids=fa_centroids, clusters=fa_clusters, k=num_clusters)
+  
+
+  et <- Sys.time()
+  rt = et-st
+  FuzzyArt_Module = list()
+  FuzzyArt_Module[["Labels"]]=cluster_labels
+  FuzzyArt_Module[["clusters"]]=clusters
+  FuzzyArt_Module[["centroids"]]=fa_centroids
+  FuzzyArt_Module[["weights"]]= w
+  FuzzyArt_Module[["params"]] = params
+  FuzzyArt_Module[["iterations"]] = iterations
+  FuzzyArt_Module[["num_cluster"]] = num_clusters
+  FuzzyArt_Module[["running_time"]] = rt
+  
+  
+  return(FuzzyArt_Module)
+}
+```
+
+
+```{r}
+#' Predicts the cluster labels for given input patterns based on a trained FuzzyART model.
+#'
+#' @param inputs Specifies the input patterns.
+#' @param FuzzyArt_Module A trained FuzzyArt_Module as created by FuzzyART_train.
+#'
+#' @return The prediced labels for the imput patterns.
+#' @export
+#'
+#' @examples normalized_inputs = normalize(df = subset(iris,select = -Species))
+#' mod  = FuzzyART_train(normalized_inputs,alpha = 0.3,rho = .6,beta = .02,
+#'                       max_epochs = 100,max_clusters = 10)
+#' FuzzyART_predict(normalized_inputs, mod)
+cbFuzzyART_predict = function(inputs, FuzzyArt_Module)
+{
+  if(is.null(FuzzyArt_Module)) stop("Error. Specify FuzzyArt_Module as a FuzzyART model as trained by FuzzyART_train")
+  dataset = cbind(inputs,inputs-1)
+  labels = apply(dataset, MARGIN = 1,FUN = function(pattern){return(cbeval_pattern(pattern = pattern,w = FuzzyArt_Module$w,
+                                                                      alpha = FuzzyArt_Module$params$alpha, rho = FuzzyArt_Module$params$rho,
+                                                                      match_fn = FuzzyArt_Module$params$match_fn,
+                                                                      vigilance_fn = FuzzyArt_Module$params$vigilance_fn))})
+  
+  fa_clusters = list()
+  for(k in 1:num_clusters)
+  {
+    fa_clusters[[k]] <- dataset[which(labels == k),]
+  }
+  
+
+  fa_centroids = matrix(NA,nrow=num_clusters,ncol=ncol(input)+1)
+  fa_centroids<-recalculate_centroids(centroids, clusters = qclusters,k = num_clusters)
+  
+  
+  
+  result = list()
+  result[["labels"]] = labels
+  result[["clusters"]] = fa_clusters
+  result[["centroids"]] = fa_centroids
+  return(result)
+}
+
+
+
+#' Normalizes the data to lie within the d dimensional hypercube $\[0,1\]^d$, where d is the number of features or columns of the data. This procedure should not be confused with standardization where the mean is centered at zero and the standard deviation is set to 1 (a.k.a. z-score).
+#'
+#' @param df a data.frame like structure to be normalized
+#'
+#' @return The normalized data.frame or data matrix.
+#' @export
+#'
+#' @examples df = data.frame(a = c(1,-1,2), b = c(.1,-2,2))
+#' normalize(df)
+normalize = function(df)
+{
+  return(apply(X = df,MARGIN = 2,FUN = function(col){(col-min(col))/(max(col)-min(col))}))
+}
+```
+
+```{r}
+fabook3 <- FuzzyART_train(n_dt, alpha = 0.3, rho = 0.5, beta = 0.08, max_epochs = 1000, max_clusters = 5)
+fabook3
+```
+
+
+```{r}
+hasilfabook3<-FuzzyART_predict(n_dt, fabook3)
+hasilfabook3
+compilebook3<-cbind(hasilfabook3,data.km$cluster)
+#compilebook3
+```
+
+
+```{r}
+fabk3 <- cbind(fabook3$Labels,hasilfabook3,data.km$cluster)
+fabk3
+str(hasilfabook3)
+str(data.km$cluster)
+
+```
+```{r}
+confusionMatrix(table(as.factor(hasilfabook3),as.factor(data.km$cluster)))
+```
+
+```{r}
+silfa <- silhouette(hasilfabook3, dist(book3))
+silfa
+```
+
+```{r}
+plot(silfa, main ="Silhouette plot - FUZZY ART")
+```
+```{r}
+
+fa_stats <- cluster.stats(dd,  hasilfabook3)
+```
+
+
+```{r}
+fviz_silhouette(silfa)
+si.sum <- summary(silfa)
+summary(silfa)
+```
+
+```{r}
+fviz_cluster(hasilfabook3, data = book3,
+             ellipse.type = "convex",
+             palette = "jco",
+             ggtheme = theme_minimal())
+```
+
+
+
+## INI PAKE PACKAGE
+```{r}
+library(FuzzyART)
+```
+
+```{r}
+cnormalized_inputs = normalize(df =book3)
+ cmod  = FuzzyART_train(cnormalized_inputs,alpha = 0.3,rho = .6,beta = .02,
+                      max_epochs = 100,max_clusters = 10)
+FuzzyART_predict(cnormalized_inputs, cmod)
+View(book3)
+cnormalized_inputs
+```
+
+```{r}
+library(FuzzyART)
+library(mclust)
+str(iris)
+# load data
+iinputs = subset(iris,select = -Species)
+labels.true = as.numeric(unlist(iris$Species))
+inormalized_inputs = normalize(df = iinputs)
+```
+
+
+```{r}
+# train model
+iimod  = cbFuzzyART_train(inormalized_inputs,alpha = .8,rho = .5,
+                      beta = .12, max_epochs = 1000,max_clusters =20, 
+                      random_seed = 4, show_status = FALSE, beta_decay = .9)
+iimod
+
+plot(iinputs, col = imod$Labels, pch = labels.true, 
+     main = paste0("Dataset: Iris -- Rand Index: ", 
+                   round(adjustedRandIndex(imod$Labels,labels.true),digits = 2)))
+iimod$Labels
+imod$weights
+
+
+
+
+
+irisbanding <- cbind(iimod$Labels,labels.true)
+irisbanding
+```
+```{r}
+hasilimod <- imod$Labels
+str(hasilimod)
+as.factor(hasilimod)
+sp.boong <- matrix(c(rep(1,50),rep(2,50),rep(3,50)))
+sp.boong
+confusionMatrix(table(as.factor(hasilimod),sp.boong))
+```
+
+
+```{r}
+ihasil <- FuzzyART_predict(inormalized_inputs, imod)
+ihasil
+str(ihasil)
+```
+
+
+```{r}
+cm <- apply(ihasil, margin = 1 , FUN = mean(ihasil))
+```
+```{r}
+sili <- silhouette(ihasil, dist(iinputs))
+sili
+```
+
+```{r}
+library(fpc)
+#km_stats <- cluster.stats(dd,  data.km$cluster)
+
+```
+```{r}
+cbfabook3 <- cbFuzzyART_train(n_dt, alpha = 0.3, rho = 0.5, beta = 0.08, max_epochs = 1000, max_clusters = 5)
+cbfabook3
+```
+```{r}
+cbhasilfabook3<-cbFuzzyART_predict(n_dt, cbfabook3)
+cbhasilfabook3$clusters
+```
+
+
+```{r}
+cbfabk3 <- cbind(fabook3$Labels,hasilfabook3,cbfabook3$Labels,cbhasilfabook3,data.km$cluster,cbkmeans$labels)
+cbfabk3
+
+
+#str(cbhasilfabook3)
+```
+```{r}
+kmberdua<-cbind(data.km$cluster,cbkmeans2$labels,cbkmeans3$labels,tfa$labels,kmttfa$labels)
+kmberdua
+```
+```{r}
+data.km$centers
+data.km$size
+cbkmeans2$centroids
+
+kmttfa$centroids
+kmttfa$size
+```
+
+
+
+```{r}
+
+library(caret)
+confusionMatrix(table(as.factor(cbkmeans3$labels),as.factor(data.km$cluster)))
+```
+
+```{r}
+proc.time(kmeans(book3, 3, nstart = 25))
+```
+```{r}
+
+```
+
